@@ -13,6 +13,7 @@ private enum HistoryFilter: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \ClipboardItem.updatedAt, order: .reverse)
     private var items: [ClipboardItem]
 
@@ -171,6 +172,10 @@ struct ContentView: View {
                 cleanExpiredItems()
                 trimHistoryIfNeeded()
             }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                KeyboardHistorySync.synchronize(with: modelContext)
+            }
         }
     }
 
@@ -287,3 +292,4 @@ struct ContentView: View {
         }
     }
 }
+
