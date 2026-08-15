@@ -1,7 +1,7 @@
 name: SuperPortapapeles
 
 options:
-  bundleIdPrefix: com.spidy229
+  bundleIdPrefix: app.uva715.squirrel8760
   deploymentTarget:
     iOS: "18.0"
   createIntermediateGroups: true
@@ -27,10 +27,10 @@ targets:
       - path: SuperPortapapelesV2/Assets.xcassets
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.spidy229.superportapapeles
+        PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760
         PRODUCT_NAME: SuperPortapapeles
-        MARKETING_VERSION: "2.0"
-        CURRENT_PROJECT_VERSION: "2"
+        MARKETING_VERSION: "2.1"
+        CURRENT_PROJECT_VERSION: "3"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Super Portapapeles
         INFOPLIST_KEY_NSFaceIDUsageDescription: Usamos Face ID para proteger tu historial privado del portapapeles.
@@ -39,6 +39,31 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
+    dependencies:
+      - target: ClipboardKeyboard
+        embed: true
+
+  ClipboardKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ClipboardKeyboard
+        excludes:
+          - Info.plist
+    info:
+      path: ClipboardKeyboard/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760.keyboard
+        PRODUCT_NAME: ClipboardKeyboard
+        MARKETING_VERSION: "2.1"
+        CURRENT_PROJECT_VERSION: "3"
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGN_IDENTITY: ""
