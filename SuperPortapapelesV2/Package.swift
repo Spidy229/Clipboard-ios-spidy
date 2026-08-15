@@ -12,8 +12,8 @@ let package = Package(
         .iOSApplication(
             name: "Super Portapapeles",
             targets: ["AppModule"],
-            displayVersion: "2.0",
-            bundleVersion: "2",
+            displayVersion: "2.3",
+            bundleVersion: "5",
             appIcon: .asset("AppIcon"),
             accentColor: .presetColor(.cyan),
             supportedDeviceFamilies: [

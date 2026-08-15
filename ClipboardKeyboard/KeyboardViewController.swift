@@ -79,6 +79,55 @@ private enum KeyboardFilter: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+private enum KeyboardContentFilter: String, CaseIterable, Identifiable {
+    case all
+    case text
+    case links
+    case images
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .all: "Todos los formatos"
+        case .text: "Texto"
+        case .links: "Enlaces"
+        case .images: "Imágenes"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .all: "Todos"
+        case .text: "Texto"
+        case .links: "Enlaces"
+        case .images: "Imágenes"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .all: "square.grid.2x2"
+        case .text: "doc.text"
+        case .links: "link"
+        case .images: "photo"
+        }
+    }
+
+    func includes(_ clip: SharedClipboardClip) -> Bool {
+        switch self {
+        case .all:
+            true
+        case .text:
+            !["link", "image"].contains(clip.kindRawValue)
+        case .links:
+            clip.kindRawValue == "link"
+        case .images:
+            clip.kindRawValue == "image"
+        }
+    }
+}
+
 private struct ClipboardKeyboardView: View {
     let clips: [SharedClipboardClip]
     let hasFullAccess: Bool
@@ -91,13 +140,22 @@ private struct ClipboardKeyboardView: View {
     let nextKeyboard: () -> Void
 
     @State private var filter: KeyboardFilter = .all
+    @AppStorage(
+        "keyboardContentFilter",
+        store: UserDefaults(suiteName: SharedClipboardStore.appGroupID)
+    ) private var contentFilterRawValue = KeyboardContentFilter.all.rawValue
+
+    private var contentFilter: KeyboardContentFilter {
+        KeyboardContentFilter(rawValue: contentFilterRawValue) ?? .all
+    }
 
     private var visibleClips: [SharedClipboardClip] {
-        switch filter {
+        let sectionClips = switch filter {
         case .all: clips
         case .favorites: clips.filter(\.isFavorite)
         case .pinned: clips.filter(\.isPinned)
         }
+        return sectionClips.filter(contentFilter.includes)
     }
 
     var body: some View {
@@ -126,6 +184,24 @@ private struct ClipboardKeyboardView: View {
                 .padding(.vertical, 3)
                 .background(.quaternary, in: Capsule())
             Spacer()
+            Menu {
+                Picker("Tipo de contenido", selection: $contentFilterRawValue) {
+                    ForEach(KeyboardContentFilter.allCases) { item in
+                        Label(item.title, systemImage: item.symbol)
+                            .tag(item.rawValue)
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                    Text(contentFilter.shortTitle)
+                        .font(.caption.weight(.semibold))
+                }
+                .frame(minWidth: 32, minHeight: 28)
+            }
+            .buttonStyle(.bordered)
+            .tint(contentFilter == .all ? .secondary : .cyan)
+            .accessibilityLabel("Filtrar por tipo de contenido")
             Button(action: refresh) {
                 Image(systemName: "arrow.clockwise")
                     .frame(width: 32, height: 28)
@@ -156,8 +232,10 @@ private struct ClipboardKeyboardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if visibleClips.isEmpty {
             ContentUnavailableView(
-                filter == .all ? "Historial vacío" : "No hay \(filter.rawValue.lowercased())",
-                systemImage: filter == .favorites ? "star" : "clipboard"
+                clips.isEmpty ? "Historial vacío" : "No hay elementos con estos filtros",
+                systemImage: contentFilter == .all
+                    ? (filter == .favorites ? "star" : "clipboard")
+                    : contentFilter.symbol
             )
             .frame(maxHeight: .infinity)
         } else {
@@ -225,3 +303,4 @@ private struct ClipboardKeyboardView: View {
         .buttonStyle(.bordered)
     }
 }
+

@@ -12,6 +12,7 @@ struct SharedClipboardClip: Codable, Identifiable, Hashable {
     var kindSymbol: String {
         switch kindRawValue {
         case "link": "link"
+        case "image": "photo"
         case "email": "envelope"
         case "phone": "phone"
         default: "text.alignleft"
@@ -103,3 +104,4 @@ enum SharedClipboardStore {
         return "text"
     }
 }
+

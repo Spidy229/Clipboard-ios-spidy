@@ -71,7 +71,7 @@ struct SettingsView: View {
                 }
 
                 Section("Acerca de") {
-                    LabeledContent("Versión", value: "2.2")
+                    LabeledContent("Versión", value: "2.3")
                     Text("Los datos se guardan únicamente en el dispositivo.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -106,3 +106,4 @@ struct SettingsView: View {
         KeyboardHistorySync.publishAppHistory(from: modelContext)
     }
 }
+
