@@ -17,15 +17,17 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Privacidad") {
+                Section {
                     Toggle("Proteger con Face ID", isOn: $requireBiometrics)
                     Toggle("No guardar códigos de un solo uso", isOn: $skipOneTimeCodes)
                     Toggle("Copiar solo en este dispositivo", isOn: $localClipboardOnly)
+                } header: {
+                    Text("Privacidad")
                 } footer: {
                     Text("El modo local evita que lo copiado se envíe mediante Portapapeles universal.")
                 }
 
-                Section("Historial") {
+                Section {
                     Picker("Límite", selection: $maximumItems) {
                         Text("50 elementos").tag(50)
                         Text("100 elementos").tag(100)
@@ -40,6 +42,8 @@ struct SettingsView: View {
                         Text("Después de 30 días").tag(30)
                         Text("Después de 90 días").tag(90)
                     }
+                } header: {
+                    Text("Historial")
                 } footer: {
                     Text("Los favoritos y los elementos fijados nunca se eliminan automáticamente.")
                 }

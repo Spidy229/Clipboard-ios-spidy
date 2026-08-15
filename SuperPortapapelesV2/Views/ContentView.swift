@@ -13,12 +13,8 @@ private enum HistoryFilter: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(
-        sort: [
-            SortDescriptor(\ClipboardItem.isPinned, order: .reverse),
-            SortDescriptor(\ClipboardItem.updatedAt, order: .reverse)
-        ]
-    ) private var items: [ClipboardItem]
+    @Query(sort: \ClipboardItem.updatedAt, order: .reverse)
+    private var items: [ClipboardItem]
 
     @AppStorage("skipOneTimeCodes") private var skipOneTimeCodes = true
     @AppStorage("localClipboardOnly") private var localClipboardOnly = true
@@ -32,7 +28,12 @@ struct ContentView: View {
     @State private var toast: String?
 
     private var filteredItems: [ClipboardItem] {
-        items.filter { item in
+        items.sorted { first, second in
+            if first.isPinned != second.isPinned {
+                return first.isPinned && !second.isPinned
+            }
+            return first.updatedAt > second.updatedAt
+        }.filter { item in
             let matchesFilter: Bool = switch filter {
             case .all: true
             case .text: item.kind != .image
