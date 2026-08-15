@@ -1,0 +1,55 @@
+name: SuperPortapapeles
+
+options:
+  bundleIdPrefix: com.spidy229
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Manual
+
+targets:
+  SuperPortapapeles:
+    type: application
+    platform: iOS
+    sources:
+      - path: SuperPortapapelesV2
+        excludes:
+          - Package.swift
+          - Info.plist
+          - Assets.xcassets
+    resources:
+      - path: SuperPortapapelesV2/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.spidy229.superportapapeles
+        PRODUCT_NAME: SuperPortapapeles
+        MARKETING_VERSION: "2.0"
+        CURRENT_PROJECT_VERSION: "2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Super Portapapeles
+        INFOPLIST_KEY_NSFaceIDUsageDescription: Usamos Face ID para proteger tu historial privado del portapapeles.
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
+
+schemes:
+  SuperPortapapeles:
+    build:
+      targets:
+        SuperPortapapeles: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
