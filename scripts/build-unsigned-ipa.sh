@@ -26,4 +26,3 @@ zip -qry Super-Portapapeles-unsigned.ipa Payload
 
 unzip -t Super-Portapapeles-unsigned.ipa
 ls -lh Super-Portapapeles-unsigned.ipa
-
