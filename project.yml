@@ -53,8 +53,6 @@ targets:
       - path: ClipboardKeyboard
         excludes:
           - Info.plist
-    info:
-      path: ClipboardKeyboard/Info.plist
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760.keyboard
