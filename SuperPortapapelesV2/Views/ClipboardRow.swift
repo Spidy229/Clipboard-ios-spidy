@@ -26,6 +26,13 @@ struct ClipboardRow: View {
                             .font(.caption2)
                             .foregroundStyle(.yellow)
                     }
+
+                    if let color = item.colorTag {
+                        Image(systemName: "circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(color.color)
+                            .accessibilityLabel("Etiqueta \(color.title)")
+                    }
                 }
 
                 Text(item.previewText)
@@ -35,6 +42,9 @@ struct ClipboardRow: View {
 
                 HStack(spacing: 8) {
                     Text(item.updatedAt, style: .relative)
+                    if let folder = item.folderName {
+                        Label(folder, systemImage: "folder.fill")
+                    }
                     ForEach(item.tags.prefix(2), id: \.self) { tag in
                         Text("#\(tag)")
                     }

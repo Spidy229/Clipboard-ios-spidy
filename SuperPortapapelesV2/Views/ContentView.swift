@@ -27,6 +27,9 @@ struct ContentView: View {
     @State private var selectedItem: ClipboardItem?
     @State private var showingSettings = false
     @State private var toast: String?
+    @State private var folders: [String] = []
+    @State private var selectedFolder = ""
+    @State private var selectedColor = ""
 
     private var filteredItems: [ClipboardItem] {
         items.sorted { first, second in
@@ -43,7 +46,9 @@ struct ContentView: View {
             }
 
             let matchesSearch = searchText.isEmpty || item.searchableText.localizedCaseInsensitiveContains(searchText)
-            return matchesFilter && matchesSearch
+            let matchesFolder = selectedFolder.isEmpty || item.folderName == selectedFolder
+            let matchesColor = selectedColor.isEmpty || item.colorTagRawValue == selectedColor
+            return matchesFilter && matchesSearch && matchesFolder && matchesColor
         }
     }
 
@@ -53,13 +58,13 @@ struct ContentView: View {
                 if filteredItems.isEmpty {
                     ContentUnavailableView {
                         Label(
-                            searchText.isEmpty ? "Tu historial está vacío" : "Sin resultados",
-                            systemImage: searchText.isEmpty ? "clipboard" : "magnifyingglass"
+                            items.isEmpty ? "Tu historial está vacío" : "Sin resultados",
+                            systemImage: items.isEmpty ? "clipboard" : "line.3.horizontal.decrease.circle"
                         )
                     } description: {
-                        Text(searchText.isEmpty
+                        Text(items.isEmpty
                              ? "Copia un texto, una imagen o un enlace y pulsa Guardar portapapeles."
-                             : "Prueba otra búsqueda o cambia el filtro.")
+                             : "Prueba otra búsqueda o limpia los filtros de carpeta y color.")
                     }
                 } else {
                     List {
@@ -140,7 +145,9 @@ struct ContentView: View {
                 captureButton
             }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    organizationFilterMenu
+
                     Button {
                         showingSettings = true
                     } label: {
@@ -155,6 +162,9 @@ struct ContentView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
+            .onChange(of: selectedItem?.id) { _, itemID in
+                if itemID == nil { reloadFolders() }
+            }
             .overlay(alignment: .top) {
                 if let toast {
                     Text(toast)
@@ -168,14 +178,79 @@ struct ContentView: View {
                 }
             }
             .task {
+                reloadFolders()
                 KeyboardHistorySync.synchronize(with: modelContext)
                 cleanExpiredItems()
                 trimHistoryIfNeeded()
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
+                reloadFolders()
                 KeyboardHistorySync.synchronize(with: modelContext)
             }
+            .onChange(of: showingSettings) { _, isShowing in
+                if !isShowing { reloadFolders() }
+            }
+        }
+    }
+
+    private var hasOrganizationFilter: Bool {
+        !selectedFolder.isEmpty || !selectedColor.isEmpty
+    }
+
+    private var organizationFilterMenu: some View {
+        Menu {
+            Menu("Carpeta") {
+                Button {
+                    selectedFolder = ""
+                } label: {
+                    Label("Todas las carpetas", systemImage: selectedFolder.isEmpty ? "checkmark" : "folder")
+                }
+
+                ForEach(folders, id: \.self) { folder in
+                    Button {
+                        selectedFolder = folder
+                    } label: {
+                        Label(folder, systemImage: selectedFolder == folder ? "checkmark" : "folder")
+                    }
+                }
+            }
+
+            Menu("Etiqueta de color") {
+                Button {
+                    selectedColor = ""
+                } label: {
+                    Label("Todos los colores", systemImage: selectedColor.isEmpty ? "checkmark" : "circle")
+                }
+
+                ForEach(SharedClipColor.allCases) { color in
+                    Button {
+                        selectedColor = color.rawValue
+                    } label: {
+                        Label(color.title, systemImage: selectedColor == color.rawValue ? "checkmark" : "circle.fill")
+                    }
+                }
+            }
+
+            if hasOrganizationFilter {
+                Divider()
+                Button("Limpiar filtros", role: .destructive) {
+                    selectedFolder = ""
+                    selectedColor = ""
+                }
+            }
+        } label: {
+            Image(systemName: hasOrganizationFilter
+                  ? "line.3.horizontal.decrease.circle.fill"
+                  : "line.3.horizontal.decrease.circle")
+        }
+        .accessibilityLabel("Filtrar por carpeta o color")
+    }
+
+    private func reloadFolders() {
+        folders = SharedClipboardStore.loadFolders()
+        if !selectedFolder.isEmpty && !folders.contains(selectedFolder) {
+            selectedFolder = ""
         }
     }
 

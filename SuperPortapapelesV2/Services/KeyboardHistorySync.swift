@@ -24,7 +24,9 @@ enum KeyboardHistorySync {
                 updatedAt: item.updatedAt,
                 kindRawValue: item.kindRawValue,
                 isFavorite: item.isFavorite,
-                isPinned: item.isPinned
+                isPinned: item.isPinned,
+                folderName: item.folderName,
+                colorTagRawValue: item.colorTagRawValue
             )
         }
         SharedClipboardStore.save(clips)
@@ -42,6 +44,8 @@ enum KeyboardHistorySync {
                     item.updatedAt = clip.updatedAt
                     item.isFavorite = clip.isFavorite
                     item.isPinned = clip.isPinned
+                    item.folderName = clip.folderName
+                    item.colorTagRawValue = clip.colorTagRawValue
                 }
                 continue
             }
@@ -56,6 +60,8 @@ enum KeyboardHistorySync {
                     kind: ClipboardKind(rawValue: clip.kindRawValue) ?? .text,
                     isFavorite: clip.isFavorite,
                     isPinned: clip.isPinned,
+                    folderName: clip.folderName,
+                    colorTagRawValue: clip.colorTagRawValue,
                     contentHash: ClipboardService.hash(data)
                 )
             )
@@ -63,3 +69,4 @@ enum KeyboardHistorySync {
         try? context.save()
     }
 }
+

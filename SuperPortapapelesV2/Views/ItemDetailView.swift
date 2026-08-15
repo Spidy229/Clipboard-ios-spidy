@@ -7,6 +7,8 @@ struct ItemDetailView: View {
     @Bindable var item: ClipboardItem
     @AppStorage("localClipboardOnly") private var localClipboardOnly = true
     @State private var copied = false
+    @State private var folders: [String] = []
+    @State private var newFolderName = ""
 
     var body: some View {
         NavigationStack {
@@ -36,6 +38,33 @@ struct ItemDetailView: View {
                 Section("Organización") {
                     Toggle("Favorito", isOn: $item.isFavorite)
                     Toggle("Fijado arriba", isOn: $item.isPinned)
+
+                    Picker("Carpeta", selection: folderBinding) {
+                        Text("Sin carpeta").tag("")
+                        ForEach(folders, id: \.self) { folder in
+                            Label(folder, systemImage: "folder")
+                                .tag(folder)
+                        }
+                    }
+
+                    HStack {
+                        TextField("Nueva carpeta", text: $newFolderName)
+                        Button(action: createFolder) {
+                            Image(systemName: "folder.badge.plus")
+                        }
+                        .disabled(newFolderName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityLabel("Crear carpeta")
+                    }
+
+                    Picker("Etiqueta de color", selection: colorBinding) {
+                        Text("Sin color").tag("")
+                        ForEach(SharedClipColor.allCases) { color in
+                            Label(color.title, systemImage: "circle.fill")
+                                .foregroundStyle(color.color)
+                                .tag(color.rawValue)
+                        }
+                    }
+
                     TextField("Etiquetas separadas por comas", text: $item.tagsText)
                         .textInputAutocapitalization(.never)
                 }
@@ -68,6 +97,31 @@ struct ItemDetailView: View {
                 try? modelContext.save()
                 KeyboardHistorySync.publishAppHistory(from: modelContext)
             }
+            .onAppear {
+                folders = SharedClipboardStore.loadFolders()
+            }
         }
     }
+
+    private var folderBinding: Binding<String> {
+        Binding(
+            get: { item.folderName ?? "" },
+            set: { item.folderName = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    private var colorBinding: Binding<String> {
+        Binding(
+            get: { item.colorTagRawValue ?? "" },
+            set: { item.colorTagRawValue = $0.isEmpty ? nil : $0 }
+        )
+    }
+
+    private func createFolder() {
+        guard let folder = SharedClipboardStore.addFolder(newFolderName) else { return }
+        folders = SharedClipboardStore.loadFolders()
+        item.folderName = folder
+        newFolderName = ""
+    }
 }
+

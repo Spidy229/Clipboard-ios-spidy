@@ -41,6 +41,8 @@ final class ClipboardItem {
     var isFavorite: Bool
     var isPinned: Bool
     var tagsText: String
+    var folderName: String?
+    var colorTagRawValue: String?
     var contentHash: String
 
     init(
@@ -54,6 +56,8 @@ final class ClipboardItem {
         isFavorite: Bool = false,
         isPinned: Bool = false,
         tagsText: String = "",
+        folderName: String? = nil,
+        colorTagRawValue: String? = nil,
         contentHash: String
     ) {
         self.id = id
@@ -66,6 +70,8 @@ final class ClipboardItem {
         self.isFavorite = isFavorite
         self.isPinned = isPinned
         self.tagsText = tagsText
+        self.folderName = folderName
+        self.colorTagRawValue = colorTagRawValue
         self.contentHash = contentHash
     }
 
@@ -79,6 +85,11 @@ final class ClipboardItem {
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+
+    var colorTag: SharedClipColor? {
+        get { colorTagRawValue.flatMap { SharedClipColor(rawValue: $0) } }
+        set { colorTagRawValue = newValue?.rawValue }
     }
 
     var searchableText: String {

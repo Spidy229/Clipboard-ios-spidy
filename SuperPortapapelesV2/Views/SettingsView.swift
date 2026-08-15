@@ -14,6 +14,8 @@ struct SettingsView: View {
     @AppStorage("autoDeleteDays") private var autoDeleteDays = 30
 
     @State private var showDeleteConfirmation = false
+    @State private var folders: [String] = []
+    @State private var newFolderName = ""
 
     var body: some View {
         NavigationStack {
@@ -49,6 +51,31 @@ struct SettingsView: View {
                     Text("Los favoritos y los elementos fijados nunca se eliminan automáticamente.")
                 }
 
+                Section {
+                    HStack {
+                        TextField("Nombre de la carpeta", text: $newFolderName)
+                        Button(action: addFolder) {
+                            Image(systemName: "plus.circle.fill")
+                        }
+                        .disabled(newFolderName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityLabel("Crear carpeta")
+                    }
+
+                    if folders.isEmpty {
+                        Text("Todavía no has creado carpetas.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(folders, id: \.self) { folder in
+                            Label(folder, systemImage: "folder")
+                        }
+                        .onDelete(perform: deleteFolders)
+                    }
+                } header: {
+                    Text("Carpetas")
+                } footer: {
+                    Text("Desliza una carpeta para eliminarla. Los elementos se conservarán sin carpeta.")
+                }
+
                 Section("Datos locales") {
                     LabeledContent("Elementos guardados", value: "\(items.count)")
                     Button("Borrar historial no protegido", role: .destructive) {
@@ -71,7 +98,7 @@ struct SettingsView: View {
                 }
 
                 Section("Acerca de") {
-                    LabeledContent("Versión", value: "2.3")
+                    LabeledContent("Versión", value: "2.4")
                     Text("Los datos se guardan únicamente en el dispositivo.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -95,7 +122,29 @@ struct SettingsView: View {
             } message: {
                 Text("Se conservarán los favoritos y los elementos fijados.")
             }
+            .onAppear {
+                folders = SharedClipboardStore.loadFolders()
+            }
         }
+    }
+
+    private func addFolder() {
+        guard SharedClipboardStore.addFolder(newFolderName) != nil else { return }
+        folders = SharedClipboardStore.loadFolders()
+        newFolderName = ""
+    }
+
+    private func deleteFolders(at offsets: IndexSet) {
+        let names = offsets.map { folders[$0] }
+        for name in names {
+            for item in items where item.folderName == name {
+                item.folderName = nil
+            }
+            SharedClipboardStore.removeFolder(name)
+        }
+        try? modelContext.save()
+        KeyboardHistorySync.publishAppHistory(from: modelContext)
+        folders = SharedClipboardStore.loadFolders()
     }
 
     private func deleteUnprotectedItems() {

@@ -55,6 +55,15 @@ final class KeyboardViewController: UIInputViewController {
                 self?.reload(capturingPasteboard: false)
             },
             refresh: { [weak self] in self?.reload(capturingPasteboard: true) },
+            paste: { [weak self] in
+                guard let self,
+                      self.hasFullAccess,
+                      let text = UIPasteboard.general.string,
+                      !text.isEmpty else { return }
+                self.textDocumentProxy.insertText(text)
+                SharedClipboardStore.addCopiedText(text)
+                self.reload(capturingPasteboard: false)
+            },
             delete: { [weak self] in self?.textDocumentProxy.deleteBackward() },
             insertSpace: { [weak self] in self?.textDocumentProxy.insertText(" ") },
             insertReturn: { [weak self] in self?.textDocumentProxy.insertText("\n") },
@@ -96,15 +105,6 @@ private enum KeyboardContentFilter: String, CaseIterable, Identifiable {
         }
     }
 
-    var shortTitle: String {
-        switch self {
-        case .all: "Todos"
-        case .text: "Texto"
-        case .links: "Enlaces"
-        case .images: "Imágenes"
-        }
-    }
-
     var symbol: String {
         switch self {
         case .all: "square.grid.2x2"
@@ -134,6 +134,7 @@ private struct ClipboardKeyboardView: View {
     let insert: (SharedClipboardClip) -> Void
     let toggleFavorite: (SharedClipboardClip) -> Void
     let refresh: () -> Void
+    let paste: () -> Void
     let delete: () -> Void
     let insertSpace: () -> Void
     let insertReturn: () -> Void
@@ -144,6 +145,14 @@ private struct ClipboardKeyboardView: View {
         "keyboardContentFilter",
         store: UserDefaults(suiteName: SharedClipboardStore.appGroupID)
     ) private var contentFilterRawValue = KeyboardContentFilter.all.rawValue
+    @AppStorage(
+        "keyboardFolderFilter",
+        store: UserDefaults(suiteName: SharedClipboardStore.appGroupID)
+    ) private var selectedFolder = ""
+    @AppStorage(
+        "keyboardColorFilter",
+        store: UserDefaults(suiteName: SharedClipboardStore.appGroupID)
+    ) private var selectedColor = ""
 
     private var contentFilter: KeyboardContentFilter {
         KeyboardContentFilter(rawValue: contentFilterRawValue) ?? .all
@@ -155,7 +164,19 @@ private struct ClipboardKeyboardView: View {
         case .favorites: clips.filter(\.isFavorite)
         case .pinned: clips.filter(\.isPinned)
         }
-        return sectionClips.filter(contentFilter.includes)
+        return sectionClips
+            .filter(contentFilter.includes)
+            .filter { selectedFolder.isEmpty || $0.folderName == selectedFolder }
+            .filter { selectedColor.isEmpty || $0.colorTagRawValue == selectedColor }
+    }
+
+    private var hasOrganizationFilter: Bool {
+        !selectedFolder.isEmpty || !selectedColor.isEmpty
+    }
+
+    private var organizationFilterColor: Color {
+        if let color = SharedClipColor(rawValue: selectedColor) { return color.color }
+        return selectedFolder.isEmpty ? .primary : .cyan
     }
 
     var body: some View {
@@ -175,15 +196,10 @@ private struct ClipboardKeyboardView: View {
         HStack(spacing: 8) {
             Image(systemName: "clipboard.fill")
                 .foregroundStyle(.cyan)
-            Text("Super Portapapeles")
-                .font(.headline)
-            Text("\(clips.count)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(.quaternary, in: Capsule())
-            Spacer()
+            Text("Portapapeles")
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+            Spacer(minLength: 0)
             Menu {
                 Picker("Tipo de contenido", selection: $contentFilterRawValue) {
                     ForEach(KeyboardContentFilter.allCases) { item in
@@ -192,16 +208,13 @@ private struct ClipboardKeyboardView: View {
                     }
                 }
             } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "line.3.horizontal.decrease")
-                    Text(contentFilter.shortTitle)
-                        .font(.caption.weight(.semibold))
-                }
-                .frame(minWidth: 32, minHeight: 28)
+                Image(systemName: contentFilter.symbol)
+                    .frame(width: 32, height: 28)
             }
             .buttonStyle(.bordered)
             .tint(contentFilter == .all ? .secondary : .cyan)
             .accessibilityLabel("Filtrar por tipo de contenido")
+            organizationMenu
             Button(action: refresh) {
                 Image(systemName: "arrow.clockwise")
                     .frame(width: 32, height: 28)
@@ -217,6 +230,56 @@ private struct ClipboardKeyboardView: View {
             }
         }
         .pickerStyle(.segmented)
+    }
+
+    private var organizationMenu: some View {
+        Menu {
+            Menu("Carpeta") {
+                Button {
+                    selectedFolder = ""
+                } label: {
+                    Label("Todas las carpetas", systemImage: selectedFolder.isEmpty ? "checkmark" : "folder")
+                }
+
+                ForEach(SharedClipboardStore.loadFolders(), id: \.self) { folder in
+                    Button {
+                        selectedFolder = folder
+                    } label: {
+                        Label(folder, systemImage: selectedFolder == folder ? "checkmark" : "folder")
+                    }
+                }
+            }
+
+            Menu("Etiqueta de color") {
+                Button {
+                    selectedColor = ""
+                } label: {
+                    Label("Todos los colores", systemImage: selectedColor.isEmpty ? "checkmark" : "circle")
+                }
+
+                ForEach(SharedClipColor.allCases) { color in
+                    Button {
+                        selectedColor = color.rawValue
+                    } label: {
+                        Label(color.title, systemImage: selectedColor == color.rawValue ? "checkmark" : "circle.fill")
+                    }
+                }
+            }
+
+            if hasOrganizationFilter {
+                Divider()
+                Button("Limpiar filtros", role: .destructive) {
+                    selectedFolder = ""
+                    selectedColor = ""
+                }
+            }
+        } label: {
+            Image(systemName: hasOrganizationFilter ? "folder.fill" : "folder")
+                .foregroundStyle(organizationFilterColor)
+                .frame(width: 32, height: 28)
+        }
+        .buttonStyle(.bordered)
+        .accessibilityLabel("Filtrar por carpeta o color")
     }
 
     @ViewBuilder
@@ -250,14 +313,26 @@ private struct ClipboardKeyboardView: View {
                                     Image(systemName: clip.kindSymbol)
                                         .foregroundStyle(.cyan)
                                         .frame(width: 20)
+                                    if let colorRawValue = clip.colorTagRawValue,
+                                       let color = SharedClipColor(rawValue: colorRawValue) {
+                                        Circle()
+                                            .fill(color.color)
+                                            .frame(width: 8, height: 8)
+                                    }
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(clip.text)
                                             .font(.callout)
                                             .lineLimit(2)
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                        Text(clip.updatedAt, style: .relative)
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
+                                        HStack(spacing: 6) {
+                                            Text(clip.updatedAt, style: .relative)
+                                            if let folder = clip.folderName {
+                                                Label(folder, systemImage: "folder.fill")
+                                                    .lineLimit(1)
+                                            }
+                                        }
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
                                     }
                                 }
                                 .contentShape(Rectangle())
@@ -283,8 +358,9 @@ private struct ClipboardKeyboardView: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 5) {
             keyboardButton("globe", action: nextKeyboard)
+            keyboardButton("doc.on.clipboard", action: paste)
             keyboardButton("delete.left", action: delete)
             Button(action: insertSpace) {
                 Text("espacio")
@@ -298,7 +374,7 @@ private struct ClipboardKeyboardView: View {
     private func keyboardButton(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .frame(width: 42, height: 36)
+                .frame(width: 34, height: 36)
         }
         .buttonStyle(.bordered)
     }

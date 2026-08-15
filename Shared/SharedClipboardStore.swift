@@ -1,4 +1,41 @@
 import Foundation
+import SwiftUI
+
+enum SharedClipColor: String, Codable, CaseIterable, Identifiable {
+    case red
+    case orange
+    case yellow
+    case green
+    case blue
+    case purple
+    case gray
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .red: "Rojo"
+        case .orange: "Naranja"
+        case .yellow: "Amarillo"
+        case .green: "Verde"
+        case .blue: "Azul"
+        case .purple: "Morado"
+        case .gray: "Gris"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .red: .red
+        case .orange: .orange
+        case .yellow: .yellow
+        case .green: .green
+        case .blue: .blue
+        case .purple: .purple
+        case .gray: .gray
+        }
+    }
+}
 
 struct SharedClipboardClip: Codable, Identifiable, Hashable {
     let id: UUID
@@ -8,6 +45,8 @@ struct SharedClipboardClip: Codable, Identifiable, Hashable {
     var kindRawValue: String
     var isFavorite: Bool
     var isPinned: Bool
+    var folderName: String? = nil
+    var colorTagRawValue: String? = nil
 
     var kindSymbol: String {
         switch kindRawValue {
@@ -23,6 +62,7 @@ struct SharedClipboardClip: Codable, Identifiable, Hashable {
 enum SharedClipboardStore {
     static let appGroupID = "group.b4696920c1495422.1"
     private static let fileName = "super-portapapeles-history.json"
+    private static let foldersKey = "super-portapapeles-folders"
 
     static func load() -> [SharedClipboardClip] {
         guard let url = historyURL(),
@@ -74,6 +114,35 @@ enum SharedClipboardStore {
         var clips = load()
         guard let index = clips.firstIndex(where: { $0.id == id }) else { return }
         clips[index].updatedAt = .now
+        save(clips)
+    }
+
+    static func loadFolders() -> [String] {
+        let stored = UserDefaults(suiteName: appGroupID)?.stringArray(forKey: foldersKey) ?? []
+        return stored.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    @discardableResult
+    static func addFolder(_ proposedName: String) -> String? {
+        let name = proposedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return nil }
+        var folders = loadFolders()
+        if let existing = folders.first(where: { $0.caseInsensitiveCompare(name) == .orderedSame }) {
+            return existing
+        }
+        folders.append(name)
+        UserDefaults(suiteName: appGroupID)?.set(folders, forKey: foldersKey)
+        return name
+    }
+
+    static func removeFolder(_ name: String) {
+        let folders = loadFolders().filter { $0.caseInsensitiveCompare(name) != .orderedSame }
+        UserDefaults(suiteName: appGroupID)?.set(folders, forKey: foldersKey)
+
+        var clips = load()
+        for index in clips.indices where clips[index].folderName == name {
+            clips[index].folderName = nil
+        }
         save(clips)
     }
 

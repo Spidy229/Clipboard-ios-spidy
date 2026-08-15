@@ -31,8 +31,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760
         PRODUCT_NAME: SuperPortapapeles
-        MARKETING_VERSION: "2.3"
-        CURRENT_PROJECT_VERSION: "5"
+        MARKETING_VERSION: "2.4"
+        CURRENT_PROJECT_VERSION: "6"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Super Portapapeles
         INFOPLIST_KEY_NSFaceIDUsageDescription: Usamos Face ID para proteger tu historial privado del portapapeles.
@@ -62,8 +62,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760.keyboard
         PRODUCT_NAME: ClipboardKeyboard
-        MARKETING_VERSION: "2.3"
-        CURRENT_PROJECT_VERSION: "5"
+        MARKETING_VERSION: "2.4"
+        CURRENT_PROJECT_VERSION: "6"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: ClipboardKeyboard/Info.plist
         SKIP_INSTALL: YES
