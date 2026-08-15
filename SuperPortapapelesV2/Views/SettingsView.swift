@@ -20,33 +20,33 @@ struct SettingsView: View {
             Form {
                 Section {
                     Toggle("Proteger con Face ID", isOn: $requireBiometrics)
-                    Toggle("No guardar cÃ³digos de un solo uso", isOn: $skipOneTimeCodes)
+                    Toggle("No guardar códigos de un solo uso", isOn: $skipOneTimeCodes)
                     Toggle("Copiar solo en este dispositivo", isOn: $localClipboardOnly)
                 } header: {
                     Text("Privacidad")
                 } footer: {
-                    Text("El modo local evita que lo copiado se envÃ­e mediante Portapapeles universal.")
+                    Text("El modo local evita que lo copiado se envíe mediante Portapapeles universal.")
                 }
 
                 Section {
-                    Picker("LÃ­mite", selection: $maximumItems) {
+                    Picker("Límite", selection: $maximumItems) {
                         Text("50 elementos").tag(50)
                         Text("100 elementos").tag(100)
                         Text("250 elementos").tag(250)
                         Text("500 elementos").tag(500)
                     }
 
-                    Picker("Borrado automÃ¡tico", selection: $autoDeleteDays) {
+                    Picker("Borrado automático", selection: $autoDeleteDays) {
                         Text("Nunca").tag(0)
-                        Text("DespuÃ©s de 1 dÃ­a").tag(1)
-                        Text("DespuÃ©s de 7 dÃ­as").tag(7)
-                        Text("DespuÃ©s de 30 dÃ­as").tag(30)
-                        Text("DespuÃ©s de 90 dÃ­as").tag(90)
+                        Text("Después de 1 día").tag(1)
+                        Text("Después de 7 días").tag(7)
+                        Text("Después de 30 días").tag(30)
+                        Text("Después de 90 días").tag(90)
                     }
                 } header: {
                     Text("Historial")
                 } footer: {
-                    Text("Los favoritos y los elementos fijados nunca se eliminan automÃ¡ticamente.")
+                    Text("Los favoritos y los elementos fijados nunca se eliminan automáticamente.")
                 }
 
                 Section("Datos locales") {
@@ -67,12 +67,12 @@ struct SettingsView: View {
                 } header: {
                     Text("Teclado")
                 } footer: {
-                    Text("AÃ±ade Super Portapapeles en Teclados y permite Acceso total para leer los textos copiados.")
+                    Text("Añade Super Portapapeles en Teclados y permite Acceso total para leer los textos copiados.")
                 }
 
                 Section("Acerca de") {
-                    LabeledContent("VersiÃ³n", value: "2.1")
-                    Text("Los datos se guardan Ãºnicamente en el dispositivo.")
+                    LabeledContent("Versión", value: "2.2")
+                    Text("Los datos se guardan únicamente en el dispositivo.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -84,16 +84,16 @@ struct SettingsView: View {
                 }
             }
             .confirmationDialog(
-                "Â¿Borrar el historial?",
+                "¿Borrar el historial?",
                 isPresented: $showDeleteConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Borrar textos e imÃ¡genes", role: .destructive) {
+                Button("Borrar textos e imágenes", role: .destructive) {
                     deleteUnprotectedItems()
                 }
                 Button("Cancelar", role: .cancel) {}
             } message: {
-                Text("Se conservarÃ¡n los favoritos y los elementos fijados.")
+                Text("Se conservarán los favoritos y los elementos fijados.")
             }
         }
     }
@@ -103,6 +103,6 @@ struct SettingsView: View {
             modelContext.delete(item)
         }
         try? modelContext.save()
+        KeyboardHistorySync.publishAppHistory(from: modelContext)
     }
 }
-

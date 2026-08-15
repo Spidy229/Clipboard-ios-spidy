@@ -23,14 +23,16 @@ targets:
           - Package.swift
           - Info.plist
           - Assets.xcassets
+          - SuperPortapapeles.entitlements
+      - path: Shared
     resources:
       - path: SuperPortapapelesV2/Assets.xcassets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760
         PRODUCT_NAME: SuperPortapapeles
-        MARKETING_VERSION: "2.1"
-        CURRENT_PROJECT_VERSION: "3"
+        MARKETING_VERSION: "2.2"
+        CURRENT_PROJECT_VERSION: "4"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Super Portapapeles
         INFOPLIST_KEY_NSFaceIDUsageDescription: Usamos Face ID para proteger tu historial privado del portapapeles.
@@ -42,6 +44,7 @@ targets:
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGN_IDENTITY: ""
+        CODE_SIGN_ENTITLEMENTS: SuperPortapapelesV2/SuperPortapapeles.entitlements
     dependencies:
       - target: ClipboardKeyboard
         embed: true
@@ -53,12 +56,14 @@ targets:
       - path: ClipboardKeyboard
         excludes:
           - Info.plist
+          - ClipboardKeyboard.entitlements
+      - path: Shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.uva715.squirrel8760.keyboard
         PRODUCT_NAME: ClipboardKeyboard
-        MARKETING_VERSION: "2.1"
-        CURRENT_PROJECT_VERSION: "3"
+        MARKETING_VERSION: "2.2"
+        CURRENT_PROJECT_VERSION: "4"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: ClipboardKeyboard/Info.plist
         SKIP_INSTALL: YES
@@ -67,6 +72,7 @@ targets:
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGN_IDENTITY: ""
+        CODE_SIGN_ENTITLEMENTS: ClipboardKeyboard/ClipboardKeyboard.entitlements
 
 schemes:
   SuperPortapapeles:
@@ -77,4 +83,3 @@ schemes:
       config: Debug
     archive:
       config: Release
-

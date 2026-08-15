@@ -66,8 +66,8 @@ struct ItemDetailView: View {
             .onDisappear {
                 item.updatedAt = .now
                 try? modelContext.save()
+                KeyboardHistorySync.publishAppHistory(from: modelContext)
             }
         }
     }
 }
-

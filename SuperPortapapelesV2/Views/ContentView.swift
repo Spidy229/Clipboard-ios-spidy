@@ -167,6 +167,7 @@ struct ContentView: View {
                 }
             }
             .task {
+                KeyboardHistorySync.synchronize(with: modelContext)
                 cleanExpiredItems()
                 trimHistoryIfNeeded()
             }
@@ -273,6 +274,7 @@ struct ContentView: View {
 
     private func save() {
         try? modelContext.save()
+        KeyboardHistorySync.publishAppHistory(from: modelContext)
     }
 
     private func showToast(_ message: String) {
@@ -285,4 +287,3 @@ struct ContentView: View {
         }
     }
 }
-

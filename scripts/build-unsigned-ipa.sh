@@ -20,6 +20,17 @@ xcodebuild \
 APP_PATH="build/Build/Products/Release-iphoneos/SuperPortapapeles.app"
 test -d "$APP_PATH"
 
+KEYBOARD_PATH="$APP_PATH/PlugIns/ClipboardKeyboard.appex"
+test -d "$KEYBOARD_PATH"
+
+codesign --force --sign - \
+  --entitlements ClipboardKeyboard/ClipboardKeyboard.entitlements \
+  "$KEYBOARD_PATH"
+
+codesign --force --sign - \
+  --entitlements SuperPortapapelesV2/SuperPortapapeles.entitlements \
+  "$APP_PATH"
+
 mkdir -p Payload
 cp -R "$APP_PATH" Payload/
 zip -qry Super-Portapapeles-unsigned.ipa Payload
