@@ -61,6 +61,8 @@ targets:
         PRODUCT_NAME: ClipboardKeyboard
         MARKETING_VERSION: "2.1"
         CURRENT_PROJECT_VERSION: "3"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: ClipboardKeyboard/Info.plist
         SKIP_INSTALL: YES
         APPLICATION_EXTENSION_API_ONLY: YES
         TARGETED_DEVICE_FAMILY: "1,2"
